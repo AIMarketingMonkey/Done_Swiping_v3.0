@@ -9,6 +9,39 @@ and build. Follow this top-to-bottom. Estimated time: ~60–90 min the first tim
 
 ---
 
+## Quick connect — you already have Supabase + ElevenLabs + Anthropic
+
+If the three accounts exist, this is the whole critical path. Detailed steps are
+in the numbered sections below.
+
+> **Never paste secrets into chat or commit them.** Only `EXPO_PUBLIC_SUPABASE_URL`
+> and the **anon** key go in `.env` (they ship in the client by design). The
+> service_role key, ElevenLabs API key, Anthropic key and webhook secret go to
+> the ElevenLabs dashboard or `supabase secrets set` — never the repo.
+
+1. **Supabase project** → SQL Editor → run `supabase/schema.sql` once.
+   Auth → enable Email, **Confirm email OFF**. Copy URL + anon key into `.env`.
+2. **ElevenLabs agent** → confirm: system prompt = `agent/system-prompt.txt`;
+   LLM = Claude (+ your Anthropic key); **data-collection fields match
+   `agent/agent-config.md` exactly** (this is the #1 gotcha); `end_call` on;
+   signed URL required; accepts `user_id` dynamic variable.
+3. **Deploy functions** (repo root):
+   ```bash
+   supabase login && supabase link --project-ref <PROJECT-REF>
+   supabase secrets set ELEVENLABS_API_KEY=… ELEVENLABS_AGENT_ID=… ELEVENLABS_WEBHOOK_SECRET=…
+   supabase functions deploy voice-token
+   supabase functions deploy voice-webhook --no-verify-jwt
+   ```
+4. **Webhook URL** → put `https://<PROJECT-REF>.supabase.co/functions/v1/voice-webhook`
+   into the ElevenLabs post-call webhook; copy its secret into the
+   `ELEVENLABS_WEBHOOK_SECRET` above (re-run `secrets set` + redeploy if needed).
+5. **Run** → `npm install && npm run web` → walk the checklist in §6.
+
+Apple/Google store accounts are only needed for native distribution (§5) and can
+wait.
+
+---
+
 ## 0. Prerequisites
 
 - **Node 20+** and **Git**.
